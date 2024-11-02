@@ -1,5 +1,6 @@
 private/
 __pycache__/
+iter_save_box/
 
 # Ignore all __pycache__ directories
 **/__pycache__/**
