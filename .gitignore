@@ -1,6 +1,7 @@
 private/
 __pycache__/
 iter_save_box/
+sat_init_condition/
 
 # Ignore all __pycache__ directories
 **/__pycache__/**
