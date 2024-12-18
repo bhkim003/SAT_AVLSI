@@ -14,6 +14,7 @@ module B_VPE(
     input        V_PRE,
     input        SATISFY_UP,
     input        SATISFY_LEFT,
+    input        STOCHASTIC_MODE,
     output       VI_READOUT,
     output       VI_BUS,
     output       SATISFY
@@ -32,11 +33,12 @@ module B_VPE(
     wire        wV_PRE;
     wire        wSATISFY_UP;
     wire        wSATISFY_LEFT;
+    wire        wSTOCHASTIC_MODE; 
     wire        wVI_READOUT;
-    wire        wVI_BUS;
+    wire        wZERO_DET;
     
     wire [31:0] wC0, wC1;
-    wire [6:0]  wSUM;
+    wire [5:0]  wSUM_UP, wSUM_DOWN;
     wire [31:0] wSATISFY_CLAUSE;
     
     assign wCLK          = CLK;
@@ -54,6 +56,7 @@ module B_VPE(
     assign wV_PRE        = V_PRE;
     assign wSATISFY_UP   = SATISFY_UP;
     assign wSATISFY_LEFT = SATISFY_LEFT;
+    assign wSTOCHASTIC_MODE = STOCHASTIC_MODE;
     assign VI_READOUT    = wVI_READOUT;
     assign VI_BUS        = wVI_BUS;
     
@@ -84,16 +87,19 @@ module B_VPE(
     C_ADDER_TREE U_C_ADDER_TREE (
     /*input signed  [31:0]*/ .C0 (wC0 ),
     /*input signed  [31:0]*/ .C1 (wC1 ),
-    /*output signed [6:0] */ .SUM(wSUM)
+    /*output signed [5:0] */ .SUM_UP(wSUM_UP),
+    /*output signed [5:0] */ .SUM_DOWN(wSUM_DOWN)
     );
     
     C_VAR_UPD U_C_VAR_UPD (
     /*input      */ .CLK       (wCLK       ),
     /*input      */ .RESET_N   (wRESET_N   ),
-    /*input [6:0]*/ .SUM       (wSUM       ),
+    /*input [5:0]*/ .SUM_UP    (wSUM_UP    ),
+    /*input [5:0]*/ .SUM_DOWN  (wSUM_DOWN  ),
     /*input      */ .EN        (wVUL_EN    ),
     /*input      */ .VAR_STATE (wVAR_STATE ),
     /*input      */ .V_PRE     (wV_PRE     ),
+    /*input      */ .STOCHASTIC_MODE     (wSTOCHASTIC_MODE     ),
     /*output     */ .VI_READOUT(wVI_READOUT),
     /*output     */ .VI_BUS    (wVI_BUS    )
     );

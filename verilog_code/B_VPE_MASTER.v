@@ -14,8 +14,10 @@ module B_VPE_MASTER(
     input        V_PRE,
     input        SATISFY_UP,
     input        SATISFY_LEFT,
+    input        STOCHASTIC_MODE,
     input        MERGE,
-    input [6:0]  SUM_SLAVE,
+    input [5:0]  SUM_SLAVE_UP,
+    input [5:0]  SUM_SLAVE_DOWN,
     output       VI_READOUT,
     output       VI_BUS,
     output       SATISFY
@@ -34,14 +36,15 @@ module B_VPE_MASTER(
     wire        wV_PRE;
     wire        wSATISFY_UP;
     wire        wSATISFY_LEFT;
+    wire        wSTOCHASTIC_MODE; 
     wire        wVI_READOUT;
     wire        wVI_BUS;
     
     wire [31:0] wC0, wC1;
-    wire [6:0]  wSUM;
-    wire [6:0]  wSUM_SLAVE;
-    wire [7:0]  wSUM_TOT;
-    wire [6:0]  wSUM_MUX;
+    wire [5:0]  wSUM_UP, wSUM_DOWN;
+    wire [5:0]  wSUM_SLAVE_UP, wSUM_SLAVE_DOWN;
+    wire [5:0]  wSUM_TOT_UP, wSUM_TOT_DOWN;
+    wire [5:0]  wSUM_MUX_UP, wSUM_MUX_DOWN;
     wire        wMERGE;
     wire [31:0] wSATISFY_CLAUSE;
     
@@ -60,8 +63,10 @@ module B_VPE_MASTER(
     assign wV_PRE        = V_PRE;
     assign wSATISFY_UP   = SATISFY_UP;
     assign wSATISFY_LEFT = SATISFY_LEFT;
+    assign wSTOCHASTIC_MODE = STOCHASTIC_MODE;
     assign wMERGE        = MERGE;
-    assign wSUM_SLAVE    = SUM_SLAVE;
+    assign wSUM_SLAVE_UP    = SUM_SLAVE_UP;
+    assign wSUM_SLAVE_DOWN    = SUM_SLAVE_DOWN;
     assign VI_READOUT    = wVI_READOUT;
     assign VI_BUS        = wVI_BUS;
     
@@ -92,18 +97,24 @@ module B_VPE_MASTER(
     C_ADDER_TREE U_C_ADDER_TREE (
     /*input signed  [31:0]*/ .C0 (wC0 ),
     /*input signed  [31:0]*/ .C1 (wC1 ),
-    /*output signed [6:0] */ .SUM(wSUM)
+    /*output signed [5:0] */ .SUM_UP(wSUM_UP),
+    /*output signed [5:0] */ .SUM_DOWN(wSUM_DOWN)
     );
-    assign wSUM_TOT   = wSUM + wSUM_SLAVE;
-    assign wSUM_MUX   = wMERGE ? wSUM_TOT[6:0] : wSUM; //waive overflow case...
+
+    assign wSUM_TOT_UP   = wSUM_UP + wSUM_SLAVE_UP; //waive overflow case...
+    assign wSUM_TOT_DOWN   = wSUM_DOWN + wSUM_SLAVE_DOWN; //waive overflow case...
+    assign wSUM_MUX_UP   = wMERGE ? wSUM_TOT_UP[5:0] : wSUM_UP; //waive overflow case...
+    assign wSUM_MUX_DOWN   = wMERGE ? wSUM_TOT_DOWN[5:0] : wSUM_DOWN; //waive overflow case...
     
     C_VAR_UPD U_C_VAR_UPD (
     /*input      */ .CLK       (wCLK       ),
     /*input      */ .RESET_N   (wRESET_N   ),
-    /*input [6:0]*/ .SUM       (wSUM_MUX   ),
+    /*input [5:0]*/ .SUM_UP    (wSUM_MUX_UP    ),
+    /*input [5:0]*/ .SUM_DOWN  (wSUM_MUX_DOWN  ),
     /*input      */ .EN        (wVUL_EN    ),
     /*input      */ .VAR_STATE (wVAR_STATE ),
     /*input      */ .V_PRE     (wV_PRE     ),
+    /*input      */ .STOCHASTIC_MODE     (wSTOCHASTIC_MODE     ),
     /*output     */ .VI_READOUT(wVI_READOUT),
     /*output     */ .VI_BUS    (wVI_BUS    )
     );

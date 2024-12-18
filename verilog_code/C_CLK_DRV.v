@@ -9,8 +9,7 @@ module C_CLK_DRV(
     output        RESET_ND,
     output        SRAM_STATED,
     output        VAR_STATED,
-    output [11:0] VUL_EN,
-    output        SATISFY_EN,
+    output [11:0] VUL_EN
 );
 
     reg [11:0]  rCUR_VPE;
@@ -29,7 +28,6 @@ module C_CLK_DRV(
     wire wPROC_STATEB;
     wire wPROC_STATED;
     wire wSHUFFLE;
-    wire wSATISFY_EN;
     
     assign wCLKB        = ~CLK;
     assign wRESET_NB    = ~RESET_N;
@@ -45,7 +43,6 @@ module C_CLK_DRV(
     assign wPROC_STATEB = ~wPROC_STATE;
     assign wPROC_STATED = ~wPROC_STATEB;
     assign wSHUFFLE     =  SHUFFLE;
-    assign SATISFY_EN   =  wSATISFY_EN;
     
     always @(posedge wCLKB or negedge wRESET_ND) begin
         if (!wRESET_ND) begin
@@ -68,6 +65,5 @@ module C_CLK_DRV(
     assign VUL_EN      = wSRAM_STATE ? 12'h000 : 
                          wVAR_STATE  ? 12'hFFF : 
                                        wSHF_VPE;
-    assign wSATISFY_EN = rCUR_VPE[11];
     
 endmodule // C_CLK_DRV

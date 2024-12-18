@@ -14,6 +14,7 @@ module A_SAT(
     input  [3:0]  DIN_SL,
     input  [3:0]  DIN_SR,
     input  [4:0]  INIT_VAR,
+    input         STOCHASTIC_MODE,
     output [4:0]  READ_VAR,
     output        SATISFY_ALL
 );
@@ -50,8 +51,11 @@ module A_SAT(
     wire [59:0]  wV_PRE;
     wire [59:0]  wVI_READOUT;
     wire [4:0]   wREAD_VAR;
-    wire [6:0]   wSUM_SLAVE;
+    wire [5:0]   wSUM_SLAVE_UP;
+    wire [5:0]   wSUM_SLAVE_DOWN;
     wire [59:0]  wSATISFY;
+
+    wire         wSTOCHASTIC_MODE;
     
     //0:north PAD, 1_1:east PAD, 1_2~3:south PAD, 2_:west PAD
     assign wCLK          = CLK;        //0.clk
@@ -59,8 +63,6 @@ module A_SAT(
     assign wSRAM_STATE   = SRAM_STATE; //0.phase1:sram_write_mode (input variable: DIN_S*)
     assign wVAR_STATE    = VAR_STATE;  //0.phase2:var_shift_mode (input variable: wINIT_VAR)
     assign wPROC_STATE   = PROC_STATE; //0.phase3:process_mode
-    assign wSHUFFLE      = SHUFFLE;    //0.shuffle in proc_state
-    assign wMERGE        = MERGE;      //0.merge 0&12th VPE in proc_state
     assign wVPE_XIDX     = VPE_XIDX;   //1_1.SRAM_XSEL
     assign wSW_IN_VPE    = SW_IN_VPE;  //1_1.SRAM_XSEL
     assign wVPE_YIDX     = VPE_YIDX;   //1_2.SRAM_YSEL
@@ -69,6 +71,10 @@ module A_SAT(
     assign wDIN_SL       = DIN_SL;     //1_2.SRAM_DATA
     assign wDIN_SR       = DIN_SR;     //1_2.SRAM_DATA
     assign wINIT_VAR     = INIT_VAR;   //2.input variable
+    assign wSHUFFLE      = SHUFFLE;    //3.shuffle in proc_state
+    assign wMERGE        = MERGE;      //3.merge 36&48th VPE in proc_state
+
+    assign wSTOCHASTIC_MODE        = STOCHASTIC_MODE;     
     
     C_CLK_DRV U_C_CLK_DRV(
     /*input        */ .CLK        (wCLK),
@@ -140,8 +146,10 @@ module A_SAT(
                 /*input       */ .V_PRE       (wV_PRE[i]                        ),
                 /*input       */ .SATISFY_UP  (1'b1                             ),
                 /*input       */ .SATISFY_LEFT(1'b1                             ),
+                /*input       */ .STOCHASTIC_MODE     (wSTOCHASTIC_MODE         ),
                 /*input       */ .MERGE       (wMERGE                           ),
-                /*input [6:0] */ .SUM_SLAVE   (wSUM_SLAVE                       ),
+                /*input [5:0] */ .SUM_SLAVE_UP   (wSUM_SLAVE_UP                       ),
+                /*input [5:0] */ .SUM_SLAVE_DOWN   (wSUM_SLAVE_DOWN                       ),
                 /*output      */ .VI_READOUT  (wVI_READOUT[i]                   ),
                 /*output      */ .VI_BUS      (wV[i]                            ),
                 /*output      */ .SATISFY     (wSATISFY[i]                      )
@@ -163,10 +171,12 @@ module A_SAT(
                 /*input       */ .V_PRE       (wV_PRE[i]                        ),
                 /*input       */ .SATISFY_UP  (wSATISFY[0]                      ),
                 /*input       */ .SATISFY_LEFT(1'b1                             ),
+                /*input       */ .STOCHASTIC_MODE     (wSTOCHASTIC_MODE         ),
                 /*input       */ .MERGE       (wMERGE                           ),
                 /*output      */ .VI_READOUT  (wVI_READOUT[i]                   ),
                 /*output      */ .VI_BUS      (wV[i]                            ),
-                /*output [6:0]*/ .SUM_OUT     (wSUM_SLAVE                       ),
+                /*output [5:0] */ .SUM_SLAVE_UP   (wSUM_SLAVE_UP                       ),
+                /*output [5:0] */ .SUM_SLAVE_DOWN   (wSUM_SLAVE_DOWN                       ),
                 /*output      */ .SATISFY     (wSATISFY[i]                      )
                 );
             end else begin
@@ -186,6 +196,7 @@ module A_SAT(
                 /*input       */ .V_PRE       (wV_PRE[i]                        ),
                 /*input       */ .SATISFY_UP  (i<12 ? 1'b1 : wSATISFY[(i+48)%60]),
                 /*input       */ .SATISFY_LEFT(i%12==0 ? 1'b1 : wSATISFY[i-1]   ),
+                /*input       */ .STOCHASTIC_MODE     (wSTOCHASTIC_MODE         ),
                 /*output      */ .VI_READOUT  (wVI_READOUT[i]                   ),
                 /*output      */ .VI_BUS      (wV[i]                            ),
                 /*output      */ .SATISFY     (wSATISFY[i]                      )
