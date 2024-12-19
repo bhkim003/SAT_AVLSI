@@ -3,6 +3,7 @@ __pycache__/
 iter_save_box/
 sat_init_condition/
 solv_list_save_box/
+clause_map/
 
 # Ignore all __pycache__ directories
 **/__pycache__/**
